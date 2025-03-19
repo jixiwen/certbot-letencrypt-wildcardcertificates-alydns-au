@@ -42,12 +42,12 @@ class AliDns:
                 for line in f:
                     val = line.strip()
                     domainarr.append(val)
-
-            #rootdomain = '.'.join(domain_parts[-(2 if domain_parts[-1] in {"co.jp", "com.tw", "net", "com", "com.cn", "org", "cn", "gov", "net.cn", "io", "top", "me", "int", "edu", "link"} else 3):])
-            rootdomain = '.'.join(domain_parts[-(2 if domain_parts[-1] in
-                                                 domainarr else 3):])
-            selfdomain = domain.split(rootdomain)[0]
-            return (selfdomain[0:len(selfdomain)-1], rootdomain)
+            domainarr = sorted(domainarr, key=len, reverse=True)
+            for dm in domainarr:
+                if domain.endswith("." + dm):
+                    rootdomain = ".".join(domain_parts[-1 - len(dm.split(".")):])
+		            selfdomain = domain.split(rootdomain)[0]
+		            return (selfdomain[0:len(selfdomain)-1], rootdomain)
         return ("", domain)
 
     @staticmethod
