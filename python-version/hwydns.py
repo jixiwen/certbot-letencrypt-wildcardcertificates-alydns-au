@@ -48,12 +48,24 @@ class HwyDns:
 
         if not zone_id:
             return
-
-        self.__request('POST', '/v2/zones/%s/recordsets' % (zone_id), {
+        
+        record = self.get_domain_record(domain, rr)
+        if record is not None :
+            records = record["records"]
+            records.append("\"%s\"" % (value))
+            self.__request('PUT', '/v2/zones/%s/recordsets/%s' % (zone_id, record["id"]), {
             'name'      : '%s.%s.' % (rr, domain),
             'type'      : _type,
-            'records'   : [ "\"%s\"" % (value) ]
-        })
+            'records'   : records
+            })
+        else :
+            records = [ "\"%s\"" % (value) ]
+            self.__request('POST', '/v2/zones/%s/recordsets' % (zone_id), {
+            'name'      : '%s.%s.' % (rr, domain),
+            'type'      : _type,
+            'records'   : records
+            })
+
 
     # @example hwydns.delete_domain_record("example.com", "_acme-challenge", "TXT")
     def delete_domain_record(self, domain, rr, _type = 'TXT'):
