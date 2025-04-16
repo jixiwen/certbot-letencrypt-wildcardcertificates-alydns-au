@@ -6,7 +6,7 @@
 
 不管是申请还是续期，只要是通配符证书，只能采用 dns-01 的方式校验申请者的域名，也就是说 certbot 操作者必须手动添加 DNS TXT 记录。
 
-如果你编写一个 Cron (比如 1 1 */1 * * root certbot-auto renew)，自动 renew 通配符证书，此时 Cron 无法自动添加 TXT 记录，这样 renew 操作就会失败，如何解决？
+如果你编写一个 Cron (比如 1 1 */1 * * root certbot renew)，自动 renew 通配符证书，此时 Cron 无法自动添加 TXT 记录，这样 renew 操作就会失败，如何解决？
 
 certbot 提供了一个 hook，可以编写一个 Shell 脚本，让脚本调用 DNS 服务商的 API 接口，动态添加 TXT 记录，这样就无需人工干预了。
 
@@ -62,7 +62,7 @@ $ chmod 0777 au.sh
 测试是否有错误：
 
 ```
-$ ./certbot-auto certonly  -d *.example.com --manual --preferred-challenges dns --dry-run  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+$ ./certbot certonly  -d *.example.com --manual --preferred-challenges dns --dry-run  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 **Debug：** 操作 DNS API 可能会遇到一系列问题，比如 API token 权限不足，遇到相关问题，可以查看 /var/log/certd.log。
@@ -79,7 +79,7 @@ $ ./certbot-auto certonly  -d *.example.com --manual --preferred-challenges dns 
 
 ```
 # 实际申请
-$ ./certbot-auto certonly  -d *.example.com --manual --preferred-challenges dns --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+$ ./certbot certonly  -d *.example.com --manual --preferred-challenges dns --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 参数解释（可以不用关心）：
@@ -95,7 +95,7 @@ $ ./certbot-auto certonly  -d *.example.com --manual --preferred-challenges dns 
 如果你想为多个域名申请通配符证书（合并在一张证书中，也叫做 **SAN 通配符证书**），直接输入多个 -d 参数即可，比如：
 
 ```
-$ ./certbot-auto certonly  -d *.example.com -d *.example.org -d www.example.cn  --manual --preferred-challenges dns  --dry-run --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+$ ./certbot certonly  -d *.example.com -d *.example.org -d www.example.cn  --manual --preferred-challenges dns  --dry-run --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 ### 续期证书
@@ -103,7 +103,7 @@ $ ./certbot-auto certonly  -d *.example.com -d *.example.org -d www.example.cn  
 1：对机器上所有证书 renew
 
 ```
-$ ./certbot-auto renew  --manual --preferred-challenges dns --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+$ ./certbot renew  --manual --preferred-challenges dns --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 2：对某一张证书进行续期
@@ -111,7 +111,7 @@ $ ./certbot-auto renew  --manual --preferred-challenges dns --manual-auth-hook "
 先看看机器上有多少证书：
 
 ```
-$ ./certbot-auto certificates
+$ ./certbot certificates
 ```
 
 可以看到很多证书，如图：
@@ -121,7 +121,7 @@ $ ./certbot-auto certificates
 记住证书名，比如 simplehttps.com，然后运行下列命令 renew：
 
 ```
-$ ./certbot-auto renew --cert-name simplehttps.com  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+$ ./certbot renew --cert-name simplehttps.com  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 ### 加入 crontab
@@ -130,14 +130,14 @@ $ ./certbot-auto renew --cert-name simplehttps.com  --manual-auth-hook "/脚本�
 
 ```
 #证书有效期<30天才会renew，所以crontab可以配置为1天或1周
-1 1 */1 * * root certbot-auto renew --manual --preferred-challenges dns  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+1 1 */1 * * root certbot renew --manual --preferred-challenges dns  --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 如果是certbot 机器和运行web服务（比如 nginx，apache）的机器是同一台，那么成功renew证书后，可以启动对应的web 服务器，运行下列crontab :
 
 ```
 # 注意只有成功renew证书，才会重新启动nginx
-1 1 */1 * * root certbot-auto renew --manual --preferred-challenges dns --deploy-hook  "service nginx restart" --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
+1 1 */1 * * root certbot renew --manual --preferred-challenges dns --deploy-hook  "service nginx restart" --manual-auth-hook "/脚本目录/au.sh php aly add" --manual-cleanup-hook "/脚本目录/au.sh php aly clean"
 ```
 
 
